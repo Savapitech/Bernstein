@@ -11,7 +11,7 @@ redis:
   ressources:
     requests:
       cpu: "500m"
-      memory: "512M"
+      memory: "512Mi"
     limits:
       cpu: "1000m"
-      memory: "1024M"
+      memory: "1024Mi"
