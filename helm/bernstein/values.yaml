@@ -1,0 +1,17 @@
+redis:
+  image:
+    repository: redis
+    tag: "7.4"
+
+  replicas: 1
+  
+  service:
+    port: 6379
+
+  ressources:
+    requests:
+      cpu: "500m"
+      memory: "512M"
+    limits:
+      cpu: "1000m"
+      memory: "1024M"
