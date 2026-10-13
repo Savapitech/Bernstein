@@ -15,3 +15,23 @@ redis:
     limits:
       cpu: "1000m"
       memory: "1024Mi"
+
+postgres:
+  image:
+    repository: postgres
+    tag: "16"
+  
+  storage:
+    size: 1Gi
+
+  service:
+    port: 5432
+
+  resources:
+    request:
+      cpu: "500m"
+      memory: "512Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1024Mi"
+
