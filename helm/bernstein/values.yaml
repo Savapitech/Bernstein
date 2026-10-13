@@ -28,7 +28,7 @@ postgres:
     port: 5432
 
   resources:
-    request:
+    requests:
       cpu: "500m"
       memory: "512Mi"
     limits:
