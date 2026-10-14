@@ -71,3 +71,23 @@ worker:
       cpu: "1000m"
       memory: "1024Mi"
 
+result:
+  replicas: 2
+
+  image:
+    repository: registry.vyme.fr/savalet/bernstein/result
+    tag: "latest"
+    pullPolicy: IfNotPresent
+
+  service:
+    port: 80
+    targetPort: 80
+
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1024Mi"
+
