@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: worker
+
+spec:
+  replicas: {{.Values.worker.replicas}}
+  
+  selector:
+    matchLabels:
+      app: worker
+
+  template: 
+    metadata:
+      labels:
+        app: worker
+
+    spec:
+      imagePullSecrets:
+        - name: gitlab-registry
+
+      containers:
+        - name: worker
+
+          image: "{{.Values.worker.image.repository}}:{{.Values.worker.image.tag}}"
+          imagePullPolicy: {{.Values.worker.image.pullPolicy}}
+
+          ports:
+            - containerPort: 80
+
+          env:
+            - name: REDIS_HOST
+              value: "redis"
+
+            - name: POSTGRES_HOST
+              value: "postgres"
+
+            - name: POSTGRES_PORT
+              value: "5432"
+
+            - name: POSTGRES_DB
+              value: "votes"
+
+            - name: POSTGRES_USER
+              value: "postgres"
+
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+
+          resources:
+            {{- toYaml .Values.worker.resources | nindent 12 }}
+
+

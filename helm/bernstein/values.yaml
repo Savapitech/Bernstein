@@ -55,3 +55,19 @@ poll:
       cpu: "1000m"
       memory: "1024Mi"
 
+worker:
+  replicas: 1
+
+  image:
+    repository: registry.vyme.fr/savalet/bernstein/worker
+    tag: "latest"
+    pullPolicy: IfNotPresent
+
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1024Mi"
+
