@@ -26,5 +26,5 @@ spec:
             - containerPort: 6379
 
           resources:
-            {{- toYaml .Values.redis.ressources | nindent 12}}
+            {{- toYaml .Values.redis.resources | nindent 12}}
 
