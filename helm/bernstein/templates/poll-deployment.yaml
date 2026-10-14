@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: poll
+
+spec:
+  replicas: {{.Values.poll.replicas}}
+
+  selector:
+    matchLabels:
+      app: poll
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+
+  template:
+    metadata:
+      labels:
+        app: poll
+
+    spec:
+      imagePullSecrets:
+        - name: gitlab-registry
+
+      containers:
+        - name: poll
+
+          image: "{{.Values.poll.image.repository}}:{{.Values.poll.image.tag}}"
+
+          ports:
+            - containerPort: 80
+
+          env:
+            - name: REDIS_HOST
+              value: "redis"
+
+          resources:
+            {{- toYaml .Values.redis.resources | nindent 12}}
+
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 3
+            periodSeconds: 5
+
