@@ -22,22 +22,22 @@ spec:
 
           env:
             - name: PGHOST
-              value: postgres
+              value: {{ .Values.db.host | quote }}
 
             - name: PGPORT
-              value: "5432"
+              value: {{ .Values.db.port | quote }}
 
             - name: PGDATABASE
-              value: votes
+              value: {{ .Values.db.name | quote }}
 
             - name: PGUSER
-              value: postgres
+              value: {{ .Values.db.user | quote }}
 
             - name: PGPASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: postgres-secret
-                  key: POSTGRES_PASSWORD
+                  name: {{ .Values.db.passwordSecret.name }}
+                  key: {{ .Values.db.passwordSecret.key }}
                     
           command:
             - psql

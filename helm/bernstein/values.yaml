@@ -1,5 +1,14 @@
 imagePullSecret: gitlab-registry
 
+db:
+  host: postgres
+  port: 5432
+  name: votes
+  user: postgres
+  passwordSecret:
+    name: postgres-secret
+    key: POSTGRES_PASSWORD
+
 redis:
   image:
     repository: redis

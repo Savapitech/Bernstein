@@ -31,11 +31,14 @@ spec:
           - name: POSTGRES_PASSWORD
             valueFrom:
               secretKeyRef:
-                name: postgres-secret
-                key: POSTGRES_PASSWORD
+                name: {{ .Values.db.passwordSecret.name }}
+                key: {{ .Values.db.passwordSecret.key }}
+
+          - name: POSTGRES_USER
+            value: {{ .Values.db.user | quote }}
 
           - name: POSTGRES_DB
-            value: "votes"
+            value: {{ .Values.db.name | quote }}
 
         volumeMounts:
           - name: postgres-data
@@ -49,9 +52,9 @@ spec:
             command:
               - pg_isready
               - -U
-              - postgres
+              - {{ .Values.db.user | quote }}
               - -d
-              - votes
+              - {{ .Values.db.name | quote }}
           initialDelaySeconds: 5
           periodSeconds: 5
             

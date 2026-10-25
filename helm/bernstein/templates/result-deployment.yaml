@@ -34,22 +34,22 @@ spec:
               value: "redis"
 
             - name: POSTGRES_HOST
-              value: "postgres"
+              value: {{ .Values.db.host | quote }}
 
             - name: POSTGRES_PORT
-              value: "5432"
+              value: {{ .Values.db.port | quote }}
 
             - name: POSTGRES_DB
-              value: "votes"
+              value: {{ .Values.db.name | quote }}
 
             - name: POSTGRES_USER
-              value: "postgres"
+              value: {{ .Values.db.user | quote }}
 
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: postgres-secret
-                  key: POSTGRES_PASSWORD
+                  name: {{ .Values.db.passwordSecret.name }}
+                  key: {{ .Values.db.passwordSecret.key }}
 
           resources:
             {{- toYaml .Values.result.resources | nindent 12 }}
