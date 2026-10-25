@@ -40,7 +40,7 @@ spec:
               value: "redis"
 
           resources:
-            {{- toYaml .Values.redis.resources | nindent 12}}
+            {{- toYaml .Values.poll.resources | nindent 12}}
 
           readinessProbe:
             httpGet:
