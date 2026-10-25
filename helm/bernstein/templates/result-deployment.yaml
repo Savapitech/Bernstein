@@ -18,7 +18,7 @@ spec:
 
     spec:
       imagePullSecrets:
-        - name: gitlab-registry
+        - name: {{ .Values.imagePullSecret }}
 
       containers:
         - name: result

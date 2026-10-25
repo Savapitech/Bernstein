@@ -1,3 +1,5 @@
+imagePullSecret: gitlab-registry
+
 redis:
   image:
     repository: redis
