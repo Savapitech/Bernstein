@@ -19,15 +19,24 @@ spec:
         app: postgres
 
     spec:
+      securityContext:
+        {{- toYaml .Values.postgres.podSecurityContext | nindent 8 }}
+
       containers:
       - name: postgres
 
         image: "{{.Values.postgres.image.repository}}:{{.Values.postgres.image.tag}}"
 
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 10 }}
+
         ports:
           - containerPort: 5432
 
         env:
+          - name: PGDATA
+            value: /var/lib/postgresql/data/pgdata
+
           - name: POSTGRES_PASSWORD
             valueFrom:
               secretKeyRef:

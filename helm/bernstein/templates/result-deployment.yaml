@@ -17,6 +17,9 @@ spec:
         app: result
 
     spec:
+      securityContext:
+        {{- toYaml .Values.result.podSecurityContext | nindent 8 }}
+
       imagePullSecrets:
         - name: {{ .Values.imagePullSecret }}
 
@@ -25,6 +28,9 @@ spec:
           
           image: "{{.Values.result.image.repository}}:{{.Values.result.image.tag}}"
           imagePullPolicy: {{.Values.result.image.pullPolicy}}
+
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
 
           ports:
             - containerPort: 80

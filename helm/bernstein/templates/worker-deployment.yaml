@@ -17,6 +17,9 @@ spec:
         app: worker
 
     spec:
+      securityContext:
+        {{- toYaml .Values.worker.podSecurityContext | nindent 8 }}
+
       imagePullSecrets:
         - name: {{ .Values.imagePullSecret }}
 
@@ -25,6 +28,9 @@ spec:
 
           image: "{{.Values.worker.image.repository}}:{{.Values.worker.image.tag}}"
           imagePullPolicy: {{.Values.worker.image.pullPolicy}}
+
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
 
           ports:
             - containerPort: 80

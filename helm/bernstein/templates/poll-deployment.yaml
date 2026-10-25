@@ -23,6 +23,9 @@ spec:
         app: poll
 
     spec:
+      securityContext:
+        {{- toYaml .Values.poll.podSecurityContext | nindent 8 }}
+
       imagePullSecrets:
         - name: {{ .Values.imagePullSecret }}
 
@@ -31,6 +34,9 @@ spec:
 
           image: "{{.Values.poll.image.repository}}:{{.Values.poll.image.tag}}"
           imagePullPolicy: {{ .Values.poll.image.pullPolicy }}
+
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
 
           ports:
             - containerPort: 80

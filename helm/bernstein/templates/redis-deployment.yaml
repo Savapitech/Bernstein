@@ -17,10 +17,16 @@ spec:
         app: redis
 
     spec:
+      securityContext:
+        {{- toYaml .Values.redis.podSecurityContext | nindent 8 }}
+
       containers:
         - name: redis
 
           image: "{{.Values.redis.image.repository}}:{{.Values.redis.image.tag}}"
+
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
 
           ports:
             - containerPort: 6379

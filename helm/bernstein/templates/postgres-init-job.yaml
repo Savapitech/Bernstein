@@ -16,9 +16,16 @@ spec:
     spec:
       restartPolicy: Never
 
+      securityContext:
+        {{- toYaml .Values.postgres.podSecurityContext | nindent 8 }}
+
+
       containers:
         - name: postgres-init
           image: "{{.Values.postgres.image.repository}}:{{.Values.postgres.image.tag}}"
+
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
 
           env:
             - name: PGHOST

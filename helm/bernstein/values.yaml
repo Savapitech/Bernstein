@@ -1,5 +1,14 @@
 imagePullSecret: gitlab-registry
 
+securityContext:
+  allowPrivilegeEscalation: false
+  runAsNonRoot: true
+  capabilities:
+    drop:
+      - ALL
+  seccompProfile:
+    type: RuntimeDefault
+
 db:
   host: postgres
   port: 5432
@@ -15,7 +24,11 @@ redis:
     tag: "7.4"
 
   replicas: 1
-  
+
+  podSecurityContext:
+    runAsUser: 999
+    runAsGroup: 999
+
   service:
     type: ClusterIP
     port: 6379
@@ -32,7 +45,13 @@ postgres:
   image:
     repository: postgres
     tag: "16"
-  
+
+  podSecurityContext:
+    runAsUser: 999
+    runAsGroup: 999
+    fsGroup: 999
+    fsGroupChangePolicy: OnRootMismatch
+
   storage:
     size: 1Gi
 
@@ -50,6 +69,13 @@ postgres:
 
 poll:
   replicas: 2
+
+  podSecurityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    sysctls:
+      - name: net.ipv4.ip_unprivileged_port_start
+        value: "0"
 
   image:
     repository: registry.vyme.fr/savalet/bernstein/poll
@@ -73,6 +99,13 @@ poll:
 worker:
   replicas: 1
 
+  podSecurityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    sysctls:
+      - name: net.ipv4.ip_unprivileged_port_start
+        value: "0"
+
   image:
     repository: registry.vyme.fr/savalet/bernstein/worker
     tag: "latest"
@@ -87,7 +120,14 @@ worker:
       memory: "1024Mi"
 
 result:
-  replicas: 2
+  replicas: 1
+
+  podSecurityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    sysctls:
+      - name: net.ipv4.ip_unprivileged_port_start
+        value: "0"
 
   image:
     repository: registry.vyme.fr/savalet/bernstein/result
