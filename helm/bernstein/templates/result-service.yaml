@@ -5,7 +5,7 @@ metadata:
   name: result
 
 spec:
-  type: ClusterIP
+  type: {{.Values.result.service.type}}
 
   selector:
     app: result
@@ -13,4 +13,7 @@ spec:
   ports:
     - port: {{.Values.result.service.port}}
       targetPort: {{.Values.result.service.targetPort}}
+      {{- if .Values.result.service.nodePort }}
+      nodePort: {{.Values.result.service.nodePort}}
+      {{- end }}
       protocol: TCP

@@ -5,7 +5,7 @@ metadata:
   name: poll
 
 spec:
-  type: ClusterIP
+  type: {{.Values.poll.service.type}}
 
   selector:
     app: poll
@@ -13,4 +13,7 @@ spec:
   ports:
     - port: {{.Values.poll.service.port}}
       targetPort: {{.Values.poll.service.targetPort}}
+      {{- if .Values.poll.service.nodePort }}
+      nodePort: {{.Values.poll.service.nodePort}}
+      {{- end }}
       protocol: TCP

@@ -17,6 +17,7 @@ redis:
   replicas: 1
   
   service:
+    type: ClusterIP
     port: 6379
 
   resources:
@@ -36,6 +37,7 @@ postgres:
     size: 1Gi
 
   service:
+    type: ClusterIP
     port: 5432
 
   resources:
@@ -55,8 +57,10 @@ poll:
     pullPolicy: IfNotPresent
 
   service:
+    type: NodePort
     port: 80
-    targetPort: 80 
+    targetPort: 80
+    nodePort: ""
 
   resources:
     requests:
@@ -91,8 +95,10 @@ result:
     pullPolicy: IfNotPresent
 
   service:
+    type: NodePort
     port: 80
     targetPort: 80
+    nodePort: ""
 
   resources:
     requests:

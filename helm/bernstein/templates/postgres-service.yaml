@@ -5,7 +5,7 @@ metadata:
   name: postgres
 
 spec:
-  type: ClusterIP
+  type: {{.Values.postgres.service.type}}
 
   selector:
     app: postgres

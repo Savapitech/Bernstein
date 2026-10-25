@@ -5,7 +5,7 @@ metadata:
   name: redis
 
 spec:
-  type: ClusterIP
+  type: {{.Values.redis.service.type}}
 
   selector:
     app: redis
