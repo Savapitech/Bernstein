@@ -4,6 +4,13 @@ kind: Service
 metadata:
   name: result
 
+  {{- with .Values.result.ingress.stickyCookie }}
+  annotations:
+    traefik.ingress.kubernetes.io/service.sticky.cookie: "true"
+    traefik.ingress.kubernetes.io/service.sticky.cookie.name: {{ . | quote }}
+    traefik.ingress.kubernetes.io/service.sticky.cookie.httponly: "true"
+  {{- end }}
+
 spec:
   type: {{.Values.result.service.type}}
 

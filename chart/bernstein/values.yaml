@@ -9,6 +9,9 @@ securityContext:
   seccompProfile:
     type: RuntimeDefault
 
+ingress:
+  className: traefik
+
 db:
   host: postgres
   port: 5432
@@ -88,6 +91,10 @@ poll:
     targetPort: 80
     nodePort: ""
 
+  ingress:
+    enabled: true
+    host: poll.bernstein.local
+
   resources:
     requests:
       cpu: "500m"
@@ -120,7 +127,7 @@ worker:
       memory: "1024Mi"
 
 result:
-  replicas: 1
+  replicas: 2
 
   podSecurityContext:
     runAsUser: 1000
@@ -139,6 +146,11 @@ result:
     port: 80
     targetPort: 80
     nodePort: ""
+
+  ingress:
+    enabled: true
+    host: result.bernstein.local
+    stickyCookie: result_sticky
 
   resources:
     requests:
