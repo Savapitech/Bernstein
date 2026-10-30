@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: postgres-config
+
+data:
+  pg_hba.conf: |
+    local all         all trust
+    host  all         all all scram-sha-256
+    host  replication all all scram-sha-256
+
+  entrypoint.sh: |
+    #!/bin/bash
+    set -e
+
+    # pod 0 is the primary, the other pods clone it once then follow it
+    if [ "${HOSTNAME##*-}" != "0" ] && [ ! -s "$PGDATA/PG_VERSION" ]; then
+      until pg_isready -h postgres -U "$POSTGRES_USER"; do
+        sleep 2
+      done
+      pg_basebackup -h postgres -U "$POSTGRES_USER" -D "$PGDATA" -R -X stream
+    fi
+
+    exec docker-entrypoint.sh postgres -c hba_file=/etc/bernstein/pg_hba.conf

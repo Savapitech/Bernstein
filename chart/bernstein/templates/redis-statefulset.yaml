@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: StatefulSet
+
+metadata:
+  name: redis
+
+spec:
+  serviceName: redis
+
+  replicas: {{.Values.redis.replicas}}
+
+  selector:
+    matchLabels:
+      app: redis
+
+  template:
+    metadata:
+      labels:
+        app: redis
+
+    spec:
+      securityContext:
+        {{- toYaml .Values.redis.podSecurityContext | nindent 8 }}
+
+      {{- with .Values.redis.affinity }}
+
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      containers:
+        - name: redis
+
+          image: "{{.Values.redis.image.repository}}:{{.Values.redis.image.tag}}"
+
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+
+          command:
+            - sh
+            - -c
+            - |
+              if [ "${HOSTNAME##*-}" = "0" ]; then
+                exec redis-server --appendonly yes
+              fi
+              exec redis-server --appendonly yes --replicaof redis 6379
+
+          ports:
+            - containerPort: 6379
+
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+
+          resources:
+            {{- toYaml .Values.redis.resources | nindent 12}}
+
+          livenessProbe:
+            exec:
+              command:
+                - redis-cli
+                - ping
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+
+          readinessProbe:
+            exec:
+              command:
+                - redis-cli
+                - ping
+            initialDelaySeconds: 3
+            periodSeconds: 5
+
+  volumeClaimTemplates:
+    - metadata:
+        name: redis-data
+
+      spec:
+        accessModes:
+          - ReadWriteOnce
+
+        {{- with .Values.redis.storage.storageClassName }}
+        storageClassName: {{ . }}
+        {{- end }}
+
+        resources:
+          requests:
+            storage: {{.Values.redis.storage.size}}

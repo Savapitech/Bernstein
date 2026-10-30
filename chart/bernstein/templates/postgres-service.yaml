@@ -9,6 +9,7 @@ spec:
 
   selector:
     app: postgres
+    statefulset.kubernetes.io/pod-name: postgres-0
 
   ports:
     - port: {{.Values.postgres.service.port}}

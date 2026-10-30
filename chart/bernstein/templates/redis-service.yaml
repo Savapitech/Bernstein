@@ -9,6 +9,7 @@ spec:
 
   selector:
     app: redis
+    statefulset.kubernetes.io/pod-name: redis-0
 
   ports:
     - port: {{.Values.redis.service.port}}

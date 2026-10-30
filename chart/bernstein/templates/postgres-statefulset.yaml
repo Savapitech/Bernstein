@@ -7,7 +7,7 @@ metadata:
 spec:
   serviceName: postgres
 
-  replicas: 1
+  replicas: {{.Values.postgres.replicas}}
 
   selector:
     matchLabels:
@@ -22,6 +22,12 @@ spec:
       securityContext:
         {{- toYaml .Values.postgres.podSecurityContext | nindent 8 }}
 
+      {{- with .Values.postgres.affinity }}
+
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
       containers:
       - name: postgres
 
@@ -29,6 +35,10 @@ spec:
 
         securityContext:
           {{- toYaml .Values.securityContext | nindent 10 }}
+
+        command:
+          - bash
+          - /etc/bernstein/entrypoint.sh
 
         ports:
           - containerPort: 5432
@@ -43,6 +53,13 @@ spec:
                 name: {{ .Values.db.passwordSecret.name }}
                 key: {{ .Values.db.passwordSecret.key }}
 
+          # used by pg_basebackup and the replication stream
+          - name: PGPASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.db.passwordSecret.name }}
+                key: {{ .Values.db.passwordSecret.key }}
+
           - name: POSTGRES_USER
             value: {{ .Values.db.user | quote }}
 
@@ -52,30 +69,68 @@ spec:
         volumeMounts:
           - name: postgres-data
             mountPath: /var/lib/postgresql/data
-    
+
+          - name: postgres-config
+            mountPath: /etc/bernstein
+
         resources:
           {{- toYaml .Values.postgres.resources | nindent 12}}
+
+        startupProbe:
+          exec:
+            command:
+              - pg_isready
+              - -h
+              - 127.0.0.1
+              - -U
+              - {{ .Values.db.user | quote }}
+              - -d
+              - {{ .Values.db.name | quote }}
+          periodSeconds: 5
+          failureThreshold: 60
+
+        livenessProbe:
+          exec:
+            command:
+              - pg_isready
+              - -h
+              - 127.0.0.1
+              - -U
+              - {{ .Values.db.user | quote }}
+              - -d
+              - {{ .Values.db.name | quote }}
+          periodSeconds: 10
+          failureThreshold: 3
 
         readinessProbe:
           exec:
             command:
               - pg_isready
+              - -h
+              - 127.0.0.1
               - -U
               - {{ .Values.db.user | quote }}
               - -d
               - {{ .Values.db.name | quote }}
-          initialDelaySeconds: 5
           periodSeconds: 5
-            
+
+      volumes:
+        - name: postgres-config
+          configMap:
+            name: postgres-config
+
   volumeClaimTemplates:
     - metadata:
         name: postgres-data
-    
+
       spec:
         accessModes:
           - ReadWriteOnce
 
+        {{- with .Values.postgres.storage.storageClassName }}
+        storageClassName: {{ . }}
+        {{- end }}
+
         resources:
           requests:
             storage: {{.Values.postgres.storage.size}}
-

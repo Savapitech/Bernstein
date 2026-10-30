@@ -26,11 +26,28 @@ redis:
     repository: redis
     tag: "7.4"
 
-  replicas: 1
+  replicas: 2
 
   podSecurityContext:
     runAsUser: 999
     runAsGroup: 999
+    fsGroup: 999
+    fsGroupChangePolicy: OnRootMismatch
+
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            topologyKey: kubernetes.io/hostname
+            labelSelector:
+              matchLabels:
+                app: redis
+
+  storage:
+    size: 1Gi
+    # empty to use the cluster default
+    storageClassName: ""
 
   service:
     type: ClusterIP
@@ -49,14 +66,28 @@ postgres:
     repository: postgres
     tag: "16"
 
+  replicas: 2
+
   podSecurityContext:
     runAsUser: 999
     runAsGroup: 999
     fsGroup: 999
     fsGroupChangePolicy: OnRootMismatch
 
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            topologyKey: kubernetes.io/hostname
+            labelSelector:
+              matchLabels:
+                app: postgres
+
   storage:
     size: 1Gi
+    # empty to use the cluster default
+    storageClassName: ""
 
   service:
     type: ClusterIP
