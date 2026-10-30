@@ -48,9 +48,17 @@ spec:
           resources:
             {{- toYaml .Values.poll.resources | nindent 12}}
 
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+
           readinessProbe:
             httpGet:
-              path: /
+              path: /readyz
               port: 80
             initialDelaySeconds: 3
             periodSeconds: 5
