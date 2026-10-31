@@ -5,7 +5,9 @@ metadata:
   name: result
 
 spec:
+  {{- if not .Values.result.autoscaling.horizontal.enabled }}
   replicas: {{.Values.result.replicas}}
+  {{- end }}
 
   selector:
     matchLabels:

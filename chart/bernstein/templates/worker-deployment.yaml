@@ -5,7 +5,9 @@ metadata:
   name: worker
 
 spec:
+  {{- if not .Values.worker.autoscaling.horizontal.enabled }}
   replicas: {{.Values.worker.replicas}}
+  {{- end }}
   
   selector:
     matchLabels:

@@ -104,6 +104,18 @@ postgres:
 poll:
   replicas: 2
 
+  autoscaling:
+    horizontal:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 6
+      targetCPUUtilization: 70
+
+    vertical:
+      enabled: true
+      minMemory: 128Mi
+      maxMemory: 1Gi
+
   podSecurityContext:
     runAsUser: 1000
     runAsGroup: 1000
@@ -137,6 +149,18 @@ poll:
 worker:
   replicas: 1
 
+  autoscaling:
+    horizontal:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 4
+      targetCPUUtilization: 70
+
+    vertical:
+      enabled: true
+      minMemory: 128Mi
+      maxMemory: 1Gi
+
   podSecurityContext:
     runAsUser: 1000
     runAsGroup: 1000
@@ -159,6 +183,18 @@ worker:
 
 result:
   replicas: 2
+
+  autoscaling:
+    horizontal:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 6
+      targetCPUUtilization: 70
+
+    vertical:
+      enabled: true
+      minMemory: 128Mi
+      maxMemory: 1Gi
 
   podSecurityContext:
     runAsUser: 1000

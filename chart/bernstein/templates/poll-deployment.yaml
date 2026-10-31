@@ -5,7 +5,9 @@ metadata:
   name: poll
 
 spec:
+  {{- if not .Values.poll.autoscaling.horizontal.enabled }}
   replicas: {{.Values.poll.replicas}}
+  {{- end }}
 
   selector:
     matchLabels:
