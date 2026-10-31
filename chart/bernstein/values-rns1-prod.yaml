@@ -1,0 +1,15 @@
+redis:
+  storage:
+    storageClassName: local-path
+
+postgres:
+  storage:
+    storageClassName: local-path
+
+poll:
+  ingress:
+    host: poll.45.88.180.200.nip.io
+
+result:
+  ingress:
+    host: result.45.88.180.200.nip.io
