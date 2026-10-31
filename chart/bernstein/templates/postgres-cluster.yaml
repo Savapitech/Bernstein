@@ -1,0 +1,34 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+
+metadata:
+  name: db
+
+spec:
+  instances: {{.Values.postgres.replicas}}
+
+  imageName: "{{.Values.postgres.image.repository}}:{{.Values.postgres.image.tag}}"
+
+  bootstrap:
+    initdb:
+      database: {{ .Values.db.name }}
+      owner: {{ .Values.db.user }}
+      secret:
+        name: {{ .Values.db.passwordSecret.name }}
+      postInitApplicationSQL:
+        - {{ .Files.Get "files/schema.sql" | quote }}
+        - ALTER TABLE votes OWNER TO {{ .Values.db.user }}
+
+  storage:
+    size: {{.Values.postgres.storage.size}}
+    {{- with .Values.postgres.storage.storageClassName }}
+    storageClass: {{ . }}
+    {{- end }}
+
+  affinity:
+    enablePodAntiAffinity: true
+    podAntiAffinityType: preferred
+    topologyKey: kubernetes.io/hostname
+
+  resources:
+    {{- toYaml .Values.postgres.resources | nindent 4 }}

@@ -13,13 +13,13 @@ ingress:
   className: traefik
 
 db:
-  host: postgres
+  host: db-rw
   port: 5432
   name: votes
-  user: postgres
+  user: app
   passwordSecret:
     name: postgres-secret
-    key: POSTGRES_PASSWORD
+    key: password
 
 redis:
   image:
@@ -63,35 +63,15 @@ redis:
 
 postgres:
   image:
-    repository: postgres
+    repository: ghcr.io/cloudnative-pg/postgresql
     tag: "16"
 
   replicas: 2
-
-  podSecurityContext:
-    runAsUser: 999
-    runAsGroup: 999
-    fsGroup: 999
-    fsGroupChangePolicy: OnRootMismatch
-
-  affinity:
-    podAntiAffinity:
-      preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 100
-          podAffinityTerm:
-            topologyKey: kubernetes.io/hostname
-            labelSelector:
-              matchLabels:
-                app: postgres
 
   storage:
     size: 1Gi
     # empty to use the cluster default
     storageClassName: ""
-
-  service:
-    type: ClusterIP
-    port: 5432
 
   resources:
     requests:
