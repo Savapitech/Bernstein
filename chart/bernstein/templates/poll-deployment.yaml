@@ -43,6 +43,11 @@ spec:
           ports:
             - containerPort: 80
 
+          lifecycle:
+            preStop:
+              sleep:
+                seconds: 5
+
           env:
             - name: REDIS_HOST
               value: "redis"
