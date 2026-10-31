@@ -40,7 +40,8 @@ If `kubectl top nodes` fails because the kubelet certificates are self-signed, a
 - Traefik as ingress controller
 - A StorageClass able to provision `ReadWriteOnce` volumes
 - metrics-server and the Vertical Pod Autoscaler, see [Autoscaling](#autoscaling)
-- Credentials for the registry hosting the poll, worker and result images
+- Docker with buildx, to build the images
+- Credentials for the registry hosting the poll, worker and result images, with read and write access
 
 ## Installation
 
@@ -68,11 +69,16 @@ kubectl create secret generic postgres-secret \
   --from-literal=POSTGRES_PASSWORD='change-me'
 ```
 
-Install the chart:
+Log in to the registry, then build, push and deploy:
 
 ```bash
-helm install bernstein chart/bernstein --namespace bernstein
+docker login registry.vyme.fr
+./deploy.sh -f chart/bernstein/values-rns1-prod.yaml
 ```
+
+`deploy.sh` runs `build-image-push.sh`, which builds the images of `apps/` for `linux/amd64` and pushes them. Each image is tagged with a hash of its app directory, uncommitted changes included. `deploy.sh` then runs `helm upgrade --install` with these tags. Extra arguments go to helm. The registry and the platform can be changed with the `REGISTRY` and `PLATFORM` variables.
+
+Since an unchanged app keeps the same tag, it is neither rebuilt nor redeployed. A changed app gets a new tag, so Kubernetes always pulls the new image and runs a rolling update.
 
 Each time the PostgreSQL primary starts, it creates the `votes` table from `chart/bernstein/files/schema.sql` if it does not exist yet. Until then, result restarts a few times, which is expected. Check that everything is running:
 
@@ -127,9 +133,11 @@ If you rename a secret, use the same name in the `kubectl create secret` command
 ## Upgrade and uninstall
 
 ```bash
-helm upgrade bernstein ./chart/bernstein --namespace bernstein
+./deploy.sh -f chart/bernstein/values-rns1-prod.yaml
 helm uninstall bernstein --namespace bernstein
 ```
+
+Updates roll one pod at a time without downtime: a new pod has to be ready before an old one stops, and poll and result wait 5 seconds before stopping, so Traefik stops sending them requests first.
 
 Uninstalling keeps the redis and postgres volumes. Delete them to start from empty databases:
 
