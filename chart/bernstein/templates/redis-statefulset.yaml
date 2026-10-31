@@ -5,7 +5,7 @@ metadata:
   name: redis
 
 spec:
-  serviceName: redis
+  serviceName: redis-headless
 
   replicas: {{.Values.redis.replicas}}
 
@@ -40,10 +40,32 @@ spec:
             - sh
             - -c
             - |
-              if [ "${HOSTNAME##*-}" = "0" ]; then
+              me="$(hostname -i)"
+              master=""
+              while [ -z "$master" ]; do
+                master="$(redis-cli -h redis-sentinel -p 26379 --raw SENTINEL get-master-addr-by-name mymaster 2>/dev/null | head -n 1)"
+                if [ -z "$master" ]; then
+                  if [ "${HOSTNAME##*-}" = "0" ]; then
+                    master="$me"
+                  else
+                    master="$(getent hosts "redis-0.redis-headless.$NAMESPACE.svc.{{ .Values.clusterDomain }}" | awk '{ print $1 }')"
+                    [ -n "$master" ] || sleep 2
+                  fi
+                elif [ "$master" != "$me" ] && [ "$(redis-cli -h "$master" ping 2>/dev/null)" != "PONG" ]; then
+                  master=""
+                  sleep 2
+                fi
+              done
+              if [ "$master" = "$me" ]; then
                 exec redis-server --appendonly yes
               fi
-              exec redis-server --appendonly yes --replicaof redis 6379
+              exec redis-server --appendonly yes --replicaof "$master" 6379
+
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
 
           ports:
             - containerPort: 6379

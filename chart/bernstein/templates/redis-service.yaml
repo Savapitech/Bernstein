@@ -8,8 +8,7 @@ spec:
   type: {{.Values.redis.service.type}}
 
   selector:
-    app: redis
-    statefulset.kubernetes.io/pod-name: redis-0
+    app: redis-haproxy
 
   ports:
     - port: {{.Values.redis.service.port}}

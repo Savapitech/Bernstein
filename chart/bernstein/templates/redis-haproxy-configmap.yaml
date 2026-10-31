@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: redis-haproxy
+
+data:
+  haproxy.cfg: |
+    global
+      maxconn 1024
+
+    defaults
+      mode tcp
+      timeout connect 3s
+      timeout client 24h
+      timeout server 24h
+      timeout check 2s
+
+    resolvers kubedns
+      parse-resolv-conf
+      hold valid 5s
+
+    frontend redis
+      bind :6379
+      default_backend master
+
+    backend master
+      option tcp-check
+      tcp-check send PING\r\n
+      tcp-check expect string +PONG
+      tcp-check send info\ replication\r\n
+      tcp-check expect string role:master
+      tcp-check send QUIT\r\n
+      tcp-check expect string +OK
+      default-server check inter 1s fall 2 rise 2 resolvers kubedns resolve-prefer ipv4 init-addr none on-marked-down shutdown-sessions
+      {{- range $i := until (int .Values.redis.replicas) }}
+      server redis-{{ $i }} redis-{{ $i }}.redis-headless.{{ $.Release.Namespace }}.svc.{{ $.Values.clusterDomain }}:6379
+      {{- end }}

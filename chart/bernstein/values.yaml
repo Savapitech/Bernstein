@@ -1,5 +1,7 @@
 imagePullSecret: gitlab-registry
 
+clusterDomain: cluster.local
+
 securityContext:
   allowPrivilegeEscalation: false
   runAsNonRoot: true
@@ -48,6 +50,32 @@ redis:
     size: 1Gi
     # empty to use the cluster default
     storageClassName: ""
+
+  sentinel:
+    replicas: 3
+    quorum: 2
+    downAfterMilliseconds: 5000
+    failoverTimeout: 10000
+    resources:
+      requests:
+        cpu: "50m"
+        memory: "64Mi"
+      limits:
+        cpu: "200m"
+        memory: "128Mi"
+
+  haproxy:
+    image:
+      repository: haproxy
+      tag: "3.2"
+    replicas: 2
+    resources:
+      requests:
+        cpu: "50m"
+        memory: "64Mi"
+      limits:
+        cpu: "500m"
+        memory: "256Mi"
 
   service:
     type: ClusterIP

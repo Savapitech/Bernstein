@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: redis-haproxy
+
+spec:
+  replicas: {{.Values.redis.haproxy.replicas}}
+
+  selector:
+    matchLabels:
+      app: redis-haproxy
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+
+  template:
+    metadata:
+      labels:
+        app: redis-haproxy
+
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/redis-haproxy-configmap.yaml") . | sha256sum }}
+
+    spec:
+      securityContext:
+        runAsUser: 99
+        runAsGroup: 99
+
+      {{- include "bernstein.spread" "redis-haproxy" | nindent 6 }}
+
+      containers:
+        - name: haproxy
+
+          image: "{{.Values.redis.haproxy.image.repository}}:{{.Values.redis.haproxy.image.tag}}"
+
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+
+          ports:
+            - containerPort: 6379
+
+          volumeMounts:
+            - name: config
+              mountPath: /usr/local/etc/haproxy
+
+          resources:
+            {{- toYaml .Values.redis.haproxy.resources | nindent 12 }}
+
+          livenessProbe:
+            tcpSocket:
+              port: 6379
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+          readinessProbe:
+            tcpSocket:
+              port: 6379
+            periodSeconds: 5
+
+      volumes:
+        - name: config
+          configMap:
+            name: redis-haproxy
