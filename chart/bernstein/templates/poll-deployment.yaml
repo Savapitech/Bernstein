@@ -47,6 +47,12 @@ spec:
             - name: REDIS_HOST
               value: "redis"
 
+            - name: GUNICORN_CMD_ARGS
+              value: "--workers 2 --threads 8"
+
+            - name: HOME
+              value: /tmp
+
           resources:
             {{- toYaml .Values.poll.resources | nindent 12}}
 
@@ -54,6 +60,7 @@ spec:
             httpGet:
               path: /healthz
               port: 80
+            timeoutSeconds: 5
             initialDelaySeconds: 10
             periodSeconds: 10
             failureThreshold: 3
@@ -62,6 +69,7 @@ spec:
             httpGet:
               path: /readyz
               port: 80
+            timeoutSeconds: 5
             initialDelaySeconds: 3
-            periodSeconds: 5
+            periodSeconds: 10
 
