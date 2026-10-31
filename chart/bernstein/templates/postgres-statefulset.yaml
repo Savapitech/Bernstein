@@ -40,6 +40,19 @@ spec:
           - bash
           - /etc/bernstein/entrypoint.sh
 
+        lifecycle:
+          postStart:
+            exec:
+              command:
+                - bash
+                - -c
+                - |
+                  [ "${HOSTNAME##*-}" = "0" ] || exit 0
+                  until pg_isready -h 127.0.0.1 -q; do
+                    sleep 1
+                  done
+                  psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -f /etc/bernstein/schema.sql
+
         ports:
           - containerPort: 5432
 
