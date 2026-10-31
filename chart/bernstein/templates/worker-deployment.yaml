@@ -70,14 +70,15 @@ spec:
           resources:
             {{- toYaml .Values.worker.resources | nindent 12 }}
 
+          # the worker never reconnects by itself, a restart is the only way, once its redis or postgres connection is broken
           livenessProbe:
             httpGet:
-              path: /healthz
+              path: /readyz
               port: 80
             timeoutSeconds: 5
-            initialDelaySeconds: 10
+            initialDelaySeconds: 30
             periodSeconds: 10
-            failureThreshold: 3
+            failureThreshold: 6
 
           readinessProbe:
             httpGet:
