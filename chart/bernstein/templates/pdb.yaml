@@ -1,0 +1,15 @@
+{{- range $app := list "poll" "result" "worker" "redis" "redis-sentinel" "redis-haproxy" }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+
+metadata:
+  name: {{ $app }}
+
+spec:
+  maxUnavailable: 1
+
+  selector:
+    matchLabels:
+      app: {{ $app }}
+{{- end }}
