@@ -77,6 +77,14 @@ spec:
           resources:
             {{- toYaml .Values.redis.resources | nindent 12}}
 
+          startupProbe:
+            exec:
+              command:
+                - redis-cli
+                - ping
+            periodSeconds: 5
+            failureThreshold: 60
+
           livenessProbe:
             exec:
               command:

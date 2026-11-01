@@ -81,6 +81,16 @@ spec:
           resources:
             {{- toYaml .Values.redis.sentinel.resources | nindent 12 }}
 
+          startupProbe:
+            exec:
+              command:
+                - redis-cli
+                - -p
+                - "26379"
+                - ping
+            periodSeconds: 5
+            failureThreshold: 60
+
           livenessProbe:
             exec:
               command:
