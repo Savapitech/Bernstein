@@ -28,28 +28,50 @@ worker never reconnects by itself, so its liveness probe checks its Redis and Po
 - A HorizontalPodAutoscaler adds or removes pods to keep their CPU usage around 70% of the request. poll and result run between 2 and 6 pods, worker between 1 and 4.
 - A VerticalPodAutoscaler adjusts their memory request between 128Mi and 1Gi, based on what the pods actually use. It applies a new value by recreating the pods one at a time, never going below the HPA minimum.
 
-HPA needs metric-server and VPA need an external tool :
-
-```bash
-helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
-helm install metrics-server metrics-server/metrics-server --namespace kube-system
-
-helm repo add fairwinds-stable https://charts.fairwinds.com/stable
-helm install vpa fairwinds-stable/vpa --namespace vpa --create-namespace
-```
-
-If `kubectl top nodes` fails because the kubelet certificates are self-signed, as on a default Talos cluster, add `--set args={--kubelet-insecure-tls}` to the metrics-server install.
+The HPA needs metrics-server and the VPA needs the Vertical Pod Autoscaler, both installed in [Cluster setup](#cluster-setup).
 
 ## Prerequisites
 
 - A Kubernetes cluster and `kubectl` configured to reach it
 - Helm 3
 - Traefik as ingress controller
-- A StorageClass able to provision `ReadWriteOnce` volumes
-- The CloudNativePG operator: `kubectl apply --server-side -f https://github.com/cloudnative-pg/cloudnative-pg/releases/download/v1.30.1/cnpg-1.30.1.yaml`
-- metrics-server and the Vertical Pod Autoscaler, see [Autoscaling](#autoscaling)
+- A StorageClass, CloudNativePG, metrics-server and the Vertical Pod Autoscaler, see [Cluster setup](#cluster-setup)
 - Docker with buildx, to build the images
 - Credentials for the registry hosting the poll, worker and result images, with read and write access
+
+## Cluster setup
+
+These steps are done once per cluster, before the first deployment.
+
+On a Talos cluster managed by Omni, expose the local volume directory to the kubelet of the workers. Edit the cluster and machine set names in `cluster/omni-local-path-patch.yaml` first, then apply it, which restarts the kubelet of each worker:
+
+```bash
+omnictl apply -f cluster/omni-local-path-patch.yaml
+```
+
+Install the `local-path` StorageClass. Its namespace runs with the `privileged` Pod Security level, since it creates the volume directories through `hostPath`:
+
+```bash
+kubectl apply -f cluster/local-path-storage.yaml
+```
+
+Install metrics-server and the Vertical Pod Autoscaler. `--kubelet-insecure-tls` is needed when the kubelet certificates are self-signed, as on a default Talos cluster:
+
+```bash
+helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
+helm install metrics-server metrics-server/metrics-server --namespace kube-system \
+  --set 'args={--kubelet-insecure-tls}'
+
+helm repo add fairwinds-stable https://charts.fairwinds.com/stable
+helm install vpa fairwinds-stable/vpa --namespace vpa --create-namespace
+```
+
+Install the CloudNativePG operator and wait for its webhook, which has to answer before the chart creates the `db` Cluster:
+
+```bash
+kubectl apply --server-side -f https://github.com/cloudnative-pg/cloudnative-pg/releases/download/v1.30.1/cnpg-1.30.1.yaml
+kubectl rollout status deployment/cnpg-controller-manager -n cnpg-system
+```
 
 ## Installation
 
@@ -98,10 +120,12 @@ kubectl get pods -n bernstein
 
 ## Accessing the application
 
-poll and result each get a Traefik Ingress on their own host, `poll.bernstein.local` and `result.bernstein.local` by default. Set your own hosts at install time and point their DNS records to the Traefik load balancer:
+poll and result each get a Traefik Ingress on their own host, `poll.bernstein.local` and `result.bernstein.local` by default. `values-rns1-prod.yaml` sets `nip.io` hosts that resolve to the Traefik load balancer of the rns1-prod cluster. For another cluster, set your own hosts and point their DNS records to its Traefik load balancer:
 
 ```bash
-helm install bernstein chart/bernstein -n bernstein \
+./deploy.sh \
+  --set redis.storage.storageClassName=local-path \
+  --set postgres.storage.storageClassName=local-path \
   --set poll.ingress.host=poll.example.com \
   --set result.ingress.host=result.example.com
 ```
@@ -151,10 +175,9 @@ helm uninstall bernstein --namespace bernstein
 
 Updates roll one pod at a time without downtime: a new pod has to be ready before an old one stops, and poll and result wait 5 seconds before stopping, so Traefik stops sending them requests first.
 
-Uninstalling keeps the redis and postgres volumes. Delete them to start from empty databases:
+Uninstalling deletes the `db` Cluster, and CloudNativePG deletes its volumes with it, so the PostgreSQL data is lost. The redis volumes are kept, delete them to start from an empty queue:
 
 ```bash
-kubectl delete pvc -l cnpg.io/cluster=db -n bernstein
 kubectl delete pvc -l app=redis -n bernstein
 ```
 
